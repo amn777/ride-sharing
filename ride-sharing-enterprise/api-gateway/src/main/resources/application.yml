@@ -1,0 +1,94 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        - id: user-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/auth/**
+          # No JWT filter - public endpoints
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - name: JwtAuthFilter
+              args:
+                publicPaths: []
+
+        - id: driver-service
+          uri: lb://driver-service
+          predicates:
+            - Path=/api/v1/drivers/**
+          filters:
+            - name: JwtAuthFilter
+              args:
+                publicPaths: []
+
+        - id: ride-service
+          uri: lb://ride-service
+          predicates:
+            - Path=/api/v1/rides/**
+          filters:
+            - name: JwtAuthFilter
+              args:
+                publicPaths: []
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: JwtAuthFilter
+              args:
+                publicPaths: []
+
+        - id: rating-service
+          uri: lb://rating-service
+          predicates:
+            - Path=/api/v1/ratings/**
+          filters:
+            - name: JwtAuthFilter
+              args:
+                publicPaths: []
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
+            allowedHeaders: "*"
+            exposedHeaders: ["Authorization"]
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+
+jwt:
+  secret: ${JWT_SECRET:change-this-secret-min-32-chars-long}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
